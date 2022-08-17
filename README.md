@@ -1,5 +1,5 @@
 # snkr.io
-snkr with online multiplayer.
+[ussaohelcim/snkr](https://github.com/ussaohelcim/snkr) but with online multiplayer.
 
 # How to host
 

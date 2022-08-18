@@ -31,15 +31,15 @@ class Player{
 	ateEgg:boolean
 	id: string
 
-	constructor(id:string) {
+	constructor(id:string,rect:IRect) {
 
 		this.snake = {
-			body: [{ x: Math.random() * 640, y: Math.random() * 480, r: 5 }],
+			body: [{ x: Math.random() * rect.w, y: Math.random() * rect.h, r: 5,egg:false }],
 			angle: 0,
 			speed: 10,
 			name : "anon"
 		}
-		
+
 		this.ateEgg = false
 		this.id = id
 	}
@@ -49,7 +49,8 @@ class Player{
 		let lastHead = {
 			x:this.snake.body[0].x,
 			y:this.snake.body[0].y,
-			r:this.snake.body[0].r
+			r: this.snake.body[0].r,
+			egg: false
 		} 
 
 		lastHead.x += d.x * this.snake.speed
@@ -59,6 +60,7 @@ class Player{
 
 			this.snake.body.pop()
 		} else {
+			lastHead.egg = true
 			this.ateEgg = false
 		}
 
@@ -69,7 +71,7 @@ class Player{
 }
 
 export interface ISnake{
-	body: { x: number, y: number, r: 5 }[]
+	body: { x: number, y: number, r: 5,egg:boolean }[]
 	angle: number
 	speed: 10
 	name:string
@@ -98,7 +100,7 @@ export class Room{
 		}
 	}
 	createPlayer(id:string) {
-		let p = new Player(id)
+		let p = new Player(id,this.rect)
 		return p
 	}
 	getPlayer(id:string) {

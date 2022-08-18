@@ -91,12 +91,12 @@ setInterval(() => {
 						
 						io.to(rn).emit('death', p.snake)
 						
-						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5, egg:false }]
 						
 					} else if (room.checkCollisionPlayers(p)) {
 						io.to(rn).emit('death', p.snake)
 						
-						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5, egg:false }]
 					} else if (room.checkCollisionEgg(p)) {
 						room.egg = room.newEgg()
 						io.to(rn).emit('point', p.snake.body[0])
@@ -106,7 +106,7 @@ setInterval(() => {
 					} else if (room.checkCollisionSelf(p)) {
 						io.to(rn).emit('death', p.snake)
 						
-						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5, egg:false }]
 					}
 					
 					p.update()

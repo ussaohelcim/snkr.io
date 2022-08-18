@@ -91,13 +91,13 @@ class SnakeClient{
 
 				if (i > 0) {
 					let l = {p1:b,p2:a[i-1]}
-					gfx.drawLine(l,b.r *2,_green)
+					gfx.drawLine(l,(b.r *2) * (b.egg ? 2 : 1) ,_green)
 				}
 				else {
 					let d = jwML.AngleToNormalizedVector2(this.angle) 
 		
 					let l = {p1:b,p2:jwML.vector2Add(b,jwML.vector2Scale(d,5))}
-					gfx.drawLine(l,b.r *2,_green)
+					gfx.drawLine(l,b.r *2 * (b.egg ? 2 : 1) ,_green)
 				}
 			})
 

@@ -7,4 +7,4 @@
 - `npm install`
 - `npm run start`
 
-The server will be run at `http://localhost:9999`
+The server will be run at `http://localhost:${env.PORT}` or at `http://localhost:9999` 

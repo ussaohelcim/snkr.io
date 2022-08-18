@@ -8,8 +8,10 @@ let _score = 0
 let _gameRuning = true
 let _pointSound = new Audio('./point.wav')
 let _wallColision = false
-let playerName = prompt("username") || "anon"
+let playerName = prompt("Player name") || "anon"
+let roomName = prompt("Room name") || "random"
 let highscore = document.querySelector('#highscore')
+let roomNameElement = document.querySelector("#roomname")
 
 window.addEventListener('mousemove', (me) => {
 	let rect = canvas.getBoundingClientRect ()
@@ -43,7 +45,7 @@ class SnakeClient{
 			console.log(error)
 		});
 
-		SOCKET.emit('player-join', playerName , (res) => {
+		SOCKET.emit('player-join', playerName, roomName , (res) => {
 			this.egg = res.egg
 			/**@type {snk[]} */
 			this.snakes = res.snakes
@@ -52,21 +54,29 @@ class SnakeClient{
 			canvas.height = res.rect.h
 			_canvasRect.h = res.rect.h
 			_canvasRect.w = res.rect.w
+
+			roomNameElement.textContent = `Room name: ${roomName}` 
 		})
 
 		SOCKET.on('death', (snake) => {
+			
 			snake.body.forEach((b) => {
 				for (let i = 0; i < 30; i++) {
 					_bloodParticles.createParticle(b ,undefined, Math.random() * 1,Math.random() * 200)
 				}
 			})
-			
+
+			this.updateHud()
 		})
+
 		SOCKET.on('point', (position) => {
 			_pointSound.play()
+			
 			for (let i = 0; i < 30; i++) {	
 				_particles.createParticle(position ,undefined, Math.random() * 5,Math.random() * 200)
 			}
+
+			this.updateHud()
 		})
 
 	}
@@ -101,21 +111,21 @@ class SnakeClient{
 	}
 	update() {
 		SOCKET.emit('update', mouseClick, (response) => {
-
 			this.snakes = response.snakes
 			this.egg = response.egg
-
-			let sorted = this.snakes.sort((a, b) => {
-				return a.body.length < b.body.length
-			})
-
-			
-			let txt = ""
-			sorted.forEach((s, i) => {
-				txt += `${i+1} | ${s.name} | size: ${s.body.length}<br>`
-			})
-			highscore.innerHTML = txt
 		})
+		// this.updateHud()
+	}
+	updateHud() {
+		let sorted = this.snakes.sort((a, b) => {
+			return a.body.length < b.body.length
+		})
+		
+		let txt = ""
+		sorted.forEach((s, i) => {
+			txt += `${i+1} | ${s.name} | size: ${s.body.length}<br>`
+		})
+		highscore.innerHTML = txt
 	}
 	
 }

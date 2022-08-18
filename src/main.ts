@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
   });
 })
 
-server.listen(9999, async () => {
+server.listen(process.env.PORT || 9999, async () => {
 	console.log("running at",server.address())
 })
 
@@ -79,4 +79,5 @@ setInterval(() => {
 		
 		p.update()
 	})
+	
 },30)

@@ -12,40 +12,70 @@ const server = createServer(app);
 const io = new Server(server,{});
 app.use(express.static(path.join(__dirname, '..', 'dist')))
 
-const snkrServer = new SnkrServer(800,600);
+const snkrServer = new SnkrServer();
 
 io.on('connection', (socket) => {
-	socket.on('player-join', (playerName , sendToClient) => {
-		let player = snkrServer.createPlayer(socket.id)
-		player.snake.name = playerName
+	socket.on('player-join', (playerName,roomName, sendToClient) => {
+		socket.data.playername = playerName
+		socket.data.room = roomName
 
-		sendToClient({
-			snakes: snkrServer.getSnakes(),
-			rect: snkrServer.rect,
-			egg: snkrServer.egg
-		})
+		let room = snkrServer.rooms[socket.data.room]
 
-		snkrServer.addPlayer(player)
+		if (!room) {
+			snkrServer.createRoom(roomName)
+
+			room = snkrServer.rooms[socket.data.room]
+			
+		}
+
+		if (room) {
+
+			let player = room.createPlayer(socket.id)
+			player.snake.name = playerName
+			snkrServer.joinRoom(player,room)
+			socket.join(roomName)
+
+			sendToClient({
+				snakes: room.getSnakes(),
+				rect: room.rect,
+				egg: room.egg
+			})
+		}
+		
 	})
 
 	socket.on('update', (mousePos, sendToClient) => {
-		let p = snkrServer.getPlayer(socket.id)
+		let room = snkrServer.rooms[socket.data.room]
 
-		if (mousePos) {
-			let dir = jwML.vector2Angle(p!.snake.body[0],mousePos)
-			p!.snake.angle = dir
+		if (room) {
+			let p = room.getPlayer(socket.id)
+
+			if (mousePos) {
+				let dir = jwML.vector2Angle(p!.snake.body[0],mousePos)
+				p!.snake.angle = dir
+			}
+			
+			sendToClient({
+				snakes: room.getSnakes(),
+				egg: room.egg
+			})
 		}
 
-		let snakes = snkrServer.getSnakes()
 		
-		sendToClient({
-			snakes: snakes,
-			egg: snkrServer.egg
-		})
 	})
 
 	socket.on("disconnect", (reason) => {
-		snkrServer.removePlayer(socket.id)
+		let room = snkrServer.rooms[socket.data.room]
+
+		if (room) {
+			room.removePlayer(socket.id)
+			if (room.players.length === 0) {
+				snkrServer.deleteRoom(socket.data.room)
+				let idx = snkrServer.roomNames.indexOf(socket.data.room)
+				snkrServer.roomNames.splice(idx,1)
+			}
+		}
+
   });
 })
 
@@ -54,30 +84,43 @@ server.listen(process.env.PORT || 9999, async () => {
 })
 
 setInterval(() => {
-	snkrServer.players.forEach((p) => {
 
-		if (snkrServer.checkCollisionWalls(p)) {
-			io.sockets.emit('death', p.snake)
-			
-			p.snake.body = [{ x: Math.random() * snkrServer.rect.w, y: Math.random() * snkrServer.rect.h, r: 5 }]
-			
-		} else if (snkrServer.checkCollisionPlayers(p)) {
-			io.sockets.emit('death', p.snake)
-			
-			p.snake.body = [{ x: Math.random() * snkrServer.rect.w, y: Math.random() * snkrServer.rect.h, r: 5 }]
-		} else if (snkrServer.checkCollisionEgg(p)) {
-			snkrServer.egg = snkrServer.newEgg()
-			io.sockets.emit('point', p.snake.body[0])
+	snkrServer.roomNames.forEach((rn) => {
+		let room = snkrServer.rooms[rn]
 
-			p.ateEgg = true
-
-		} else if (snkrServer.checkCollisionSelf(p)) {
-			io.sockets.emit('death', p.snake)
+		if (room) {
+			room.players.forEach((p) => {
+				if (room) {//why the fuck i need this?? 
+					if (room.checkCollisionWalls(p)) {
+						
+						io.to(rn).emit('death', p.snake)
+						
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+						
+					} else if (room.checkCollisionPlayers(p)) {
+						io.to(rn).emit('death', p.snake)
+						
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+					} else if (room.checkCollisionEgg(p)) {
+						room.egg = room.newEgg()
+						io.to(rn).emit('point', p.snake.body[0])
 			
-			p.snake.body = [{ x: Math.random() * snkrServer.rect.w, y: Math.random() * snkrServer.rect.h, r: 5 }]
+						p.ateEgg = true
+			
+					} else if (room.checkCollisionSelf(p)) {
+						io.to(rn).emit('death', p.snake)
+						
+						p.snake.body = [{ x: Math.random() * room.rect.w, y: Math.random() * room.rect.h, r: 5 }]
+					}
+					
+					p.update()
+				}
+
+			})
 		}
 		
-		p.update()
 	})
+
 	
+
 },30)

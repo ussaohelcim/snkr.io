@@ -1,37 +1,99 @@
-import { Socket } from "socket.io"
 import { jwCL } from "./jwCL"
 import { IRect } from "./jwf"
 import { jwML } from "./jwML"
 
 export class SnkrServer{
+	roomNames:string[] = []
+	rooms: { [index: string]: Room | undefined } = {}
+	
+	createRoom(name:string) {
+		this.rooms[name] = new Room(name)
+		this.roomNames.push(name)
+		console.log((new Date().toISOString()))
+		console.log(name,"created")
+	}
+
+	joinRoom(player: Player, room:Room) {
+		room.addPlayer(player)
+		console.log((new Date().toISOString()))
+		console.log(player.snake.name,"joined",room.name)
+	}
+	deleteRoom(name: string) {
+		this.rooms[name] = undefined
+		console.log((new Date().toISOString()))
+		console.log(name,"deleted")
+	}
+}
+
+class Player{
+	snake:ISnake
+	ateEgg:boolean
+	id: string
+
+	constructor(id:string) {
+
+		this.snake = {
+			body: [{ x: Math.random() * 640, y: Math.random() * 480, r: 5 }],
+			angle: 0,
+			speed: 10,
+			name : "anon"
+		}
+		this.ateEgg = false
+		this.id = id
+	}
+	update() {
+		let d = jwML.AngleToNormalizedVector2(this.snake.angle)
+
+		let lastHead = {
+			x:this.snake.body[0].x,
+			y:this.snake.body[0].y,
+			r:this.snake.body[0].r
+		} 
+
+		lastHead.x += d.x * this.snake.speed
+		lastHead.y += d.y * this.snake.speed
+
+		if(!this.ateEgg){
+
+			this.snake.body.pop()
+		} else {
+			this.ateEgg = false
+		}
+
+		let newHead = lastHead
+
+		this.snake.body.unshift( newHead )
+	}	
+}
+
+export interface ISnake{
+	body: { x: number, y: number, r: 5 }[]
+	angle: number
+	speed: 10
+	name:string
+}
+
+export class Room{
+
 	players: Player[] = []
 	rect: IRect
 	egg: IRect
-	constructor(w?:number,h?:number) {
+	name:string
+	constructor(name:string,w?: number, h?: number) {
+		this.name = name
 		this.rect = jwML.rect(0, 0, w || 640, h || 480)
 		this.egg = this.newEgg()
 	}
 	addPlayer(player:Player) {
 		this.players.push(player)
 	}
-	update() {
-		
-	}
-	killPlayer() {
-		
-	}
-	sendMessage() {
-		
-	}
 	newEgg():IRect {
-
 		return {
 			h:30,
 			w:30,
 			x: Math.random() * (this.rect.w-30)   ,
 			y: Math.random() * (this.rect.h-30) 
 		}
-		
 	}
 	createPlayer(id:string) {
 		let p = new Player(id)
@@ -55,6 +117,8 @@ export class SnkrServer{
 			this.players.splice(
 				this.players.indexOf(p), 1
 			)
+			console.log((new Date().toISOString()))
+			console.log(p.snake.name,"removed from",this.name,)
 		}
 	}
 	checkCollisionSelf(player: Player) {
@@ -95,73 +159,4 @@ export class SnkrServer{
 
 		return collided
 	}
-}
-
-// class Egg{
-// 	/**@param {IRect} shape  */
-// 	constructor(shape){
-// 		this.shape = shape
-// 	}
-// }
-
-// interface IEgg extends IRect{}
-
-class Player{
-	snake:ISnake
-	ateEgg:boolean
-	id: string
-	// name:string
-	constructor(id:string) {
-		// this.snake.body = [{ x: 0, y: 0, r: 5 }]
-		// this.snake.angle = 0
-		// this.snake.speed = 10
-		this.snake = {
-			body: [{ x: Math.random() * 640, y: Math.random() * 480, r: 5 }],
-			angle: 0,
-			speed: 10,
-			name : "anon"
-		}
-		// this.name = name
-		this.ateEgg = false
-		this.id = id
-	}
-	update() {
-		let d = jwML.AngleToNormalizedVector2(this.snake.angle)
-
-		let lastHead = {
-			x:this.snake.body[0].x,
-			y:this.snake.body[0].y,
-			r:this.snake.body[0].r
-		} 
-
-		lastHead.x += d.x * this.snake.speed
-		lastHead.y += d.y * this.snake.speed
-
-		if(!this.ateEgg){
-
-			this.snake.body.pop()
-		} else {
-			this.ateEgg = false
-		}
-
-		let newHead = lastHead
-
-		this.snake.body.unshift( newHead )
-	}
-	collided() {
-		//TODO checar se colidiu com jogadores e parede
-		return false
-	}
-	collidedEgg() {
-		//TODO checar se colidiu com oovo
-		return false
-	}
-	
-}
-
-export interface ISnake{
-	body: { x: number, y: number, r: 5 }[]
-	angle: number
-	speed: 10
-	name:string
 }

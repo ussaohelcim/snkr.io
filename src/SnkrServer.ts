@@ -18,6 +18,7 @@ export class SnkrServer{
 		console.log((new Date().toISOString()))
 		console.log(player.snake.name,"joined",room.name)
 	}
+
 	deleteRoom(name: string) {
 		this.rooms[name] = undefined
 		console.log((new Date().toISOString()))
@@ -38,6 +39,7 @@ class Player{
 			speed: 10,
 			name : "anon"
 		}
+		
 		this.ateEgg = false
 		this.id = id
 	}

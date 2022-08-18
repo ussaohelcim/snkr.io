@@ -25,7 +25,6 @@ io.on('connection', (socket) => {
 			snkrServer.createRoom(roomName)
 
 			room = snkrServer.rooms[socket.data.room]
-			
 		}
 
 		if (room) {
@@ -60,8 +59,6 @@ io.on('connection', (socket) => {
 				egg: room.egg
 			})
 		}
-
-		
 	})
 
 	socket.on("disconnect", (reason) => {
@@ -75,7 +72,6 @@ io.on('connection', (socket) => {
 				snkrServer.roomNames.splice(idx,1)
 			}
 		}
-
   });
 })
 
@@ -115,12 +111,7 @@ setInterval(() => {
 					
 					p.update()
 				}
-
 			})
 		}
-		
 	})
-
-	
-
-},30)
+}, 30)

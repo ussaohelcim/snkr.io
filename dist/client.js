@@ -49,7 +49,6 @@ class SnakeClient{
 			this.egg = res.egg
 			/**@type {snk[]} */
 			this.snakes = res.snakes
-			/**@type {snk[]} */
 			canvas.width = res.rect.w
 			canvas.height = res.rect.h
 			_canvasRect.h = res.rect.h
@@ -84,9 +83,9 @@ class SnakeClient{
 	draw() {
 		gfx.drawRect(this.egg, _black)
 		gfx.setFont(20, 'Arial')
-		this.snakes.forEach((e) => {
-			
-			e.body.forEach((b,i,a)=>{
+
+		this.snakes.forEach((p) => {
+			p.body.forEach((b,i,a)=>{
 				gfx.gfx.fillStyle = 'green'
 				gfx.gfx.fill()
 
@@ -104,17 +103,16 @@ class SnakeClient{
 
 			gfx.gfx.fillStyle = 'black'
 			gfx.gfx.fill()
-			gfx.drawText(e.body[0],e.name,_red)
+			gfx.drawText(p.body[0],p.name,_red)
 		})
 
 
 	}
 	update() {
-		SOCKET.emit('update', mouseClick, (response) => {
-			this.snakes = response.snakes
-			this.egg = response.egg
+		SOCKET.emit('update', mouseClick, (res) => {
+			this.snakes = res.snakes
+			this.egg = res.egg
 		})
-		// this.updateHud()
 	}
 	updateHud() {
 		let sorted = this.snakes.sort((a, b) => {
@@ -134,16 +132,14 @@ let player = new SnakeClient()
 
 let gameUpdate = setInterval(async () => {
 	player.update()
-},16)
 
-setInterval(async () => {
 	gfx.clearBackground()
-	gfx.drawRect(_canvasRect,_green_background)
-	if (player.snakes) {
-		
+	gfx.drawRect(_canvasRect, _green_background)
+	
+	if (player.snakes) {	
 		player.draw()
 	}
+
 	_particles.draw()
 	_bloodParticles.draw()
 },16)
-
